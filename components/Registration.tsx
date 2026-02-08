@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Check, AlertTriangle, ArrowRight, Lock, User, School as SchoolIcon, Mail } from 'lucide-react';
+import { Plus, Trash2, Check, AlertTriangle, ArrowRight, Lock, User, School as SchoolIcon, Mail, Loader2 } from 'lucide-react';
 import { MAX_MEMBERS, MAX_TEAMS } from '../constants';
 import { Team, Student, SCHOOL_LIST } from '../types';
 import { getTeams, registerTeam, getRegistrationStatus } from '../services/storageService';
@@ -13,33 +13,39 @@ const Registration: React.FC = () => {
   const [members, setMembers] = useState<Student[]>([{ name: '', email: '' }]);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // State for synchronous check during render
+  // State for check during render
   const [registrationState, setRegistrationState] = useState({
       isFull: false,
       isOpen: true,
       count: 0
   });
 
-  useEffect(() => {
-      const teams = getTeams();
-      const status = getRegistrationStatus();
-      setRegistrationState({
-          isFull: teams.length >= MAX_TEAMS,
-          isOpen: status,
-          count: teams.length
-      });
-      
-      // Poll for changes (simple way to sync if multiple tabs or admin changes it)
-      const interval = setInterval(() => {
-          const t = getTeams();
-          const s = getRegistrationStatus();
-          setRegistrationState({
-            isFull: t.length >= MAX_TEAMS,
-            isOpen: s,
-            count: t.length
+  const fetchData = async () => {
+    try {
+        const teams = await getTeams();
+        const status = await getRegistrationStatus();
+        setRegistrationState({
+            isFull: teams.length >= MAX_TEAMS,
+            isOpen: status,
+            count: teams.length
         });
-      }, 2000);
+        setIsLoading(false);
+    } catch (err) {
+        console.error("Failed to fetch registration data", err);
+        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+      fetchData();
+      
+      // Poll less frequently for network performance (every 10s)
+      const interval = setInterval(() => {
+          fetchData();
+      }, 10000);
 
       return () => clearInterval(interval);
   }, []);
@@ -76,62 +82,83 @@ const Registration: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    // Re-check status on submit
-    const currentTeams = getTeams();
-    const currentStatus = getRegistrationStatus();
-    if (currentTeams.length >= MAX_TEAMS) {
-        setRegistrationState(prev => ({ ...prev, isFull: true, count: currentTeams.length }));
-        setError("REGISTRY_FULL");
-        return;
-    }
-    if (!currentStatus) {
-        setRegistrationState(prev => ({ ...prev, isOpen: false }));
-        setError("REGISTRY_CLOSED");
-        return;
-    }
-
-    if (!teamName.trim()) {
-        setError("TEAM_NAME_REQUIRED");
-        return;
-    }
-
-    if (affiliationType === 'school' && selectedSchool === 'Other' && !customSchool.trim()) {
-        setError("SCHOOL_NAME_REQUIRED");
-        return;
-    }
-
-    const hasEmptyMember = members.some(m => !m.name.trim() || !m.email.trim());
-    if (hasEmptyMember) {
-        setError("MEMBER_DATA_INCOMPLETE");
-        return;
-    }
-
-    const finalSchoolName = selectedSchool === 'Other' ? customSchool : selectedSchool;
-    
-    // Generate ID safely
-    const generateId = () => {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
+    try {
+        // Re-check status on submit (network check)
+        const currentTeams = await getTeams();
+        const currentStatus = await getRegistrationStatus();
+        
+        if (currentTeams.length >= MAX_TEAMS) {
+            setRegistrationState(prev => ({ ...prev, isFull: true, count: currentTeams.length }));
+            setError("REGISTRY_FULL");
+            setIsSubmitting(false);
+            return;
         }
-        return Date.now().toString(36) + Math.random().toString(36).substring(2);
-    };
+        if (!currentStatus) {
+            setRegistrationState(prev => ({ ...prev, isOpen: false }));
+            setError("REGISTRY_CLOSED");
+            setIsSubmitting(false);
+            return;
+        }
 
-    const newTeam: Team = {
-      id: generateId(),
-      school: finalSchoolName,
-      teamName,
-      members,
-      registeredAt: new Date().toISOString(),
-    };
+        if (!teamName.trim()) {
+            setError("TEAM_NAME_REQUIRED");
+            setIsSubmitting(false);
+            return;
+        }
 
-    registerTeam(newTeam);
-    setSubmitted(true);
-    setRegistrationState(prev => ({ ...prev, count: currentTeams.length + 1 }));
+        if (affiliationType === 'school' && selectedSchool === 'Other' && !customSchool.trim()) {
+            setError("SCHOOL_NAME_REQUIRED");
+            setIsSubmitting(false);
+            return;
+        }
+
+        const hasEmptyMember = members.some(m => !m.name.trim() || !m.email.trim());
+        if (hasEmptyMember) {
+            setError("MEMBER_DATA_INCOMPLETE");
+            setIsSubmitting(false);
+            return;
+        }
+
+        const finalSchoolName = selectedSchool === 'Other' ? customSchool : selectedSchool;
+        
+        // Generate ID safely
+        const generateId = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        };
+
+        const newTeam: Team = {
+          id: generateId(),
+          school: finalSchoolName,
+          teamName,
+          members,
+          registeredAt: new Date().toISOString(),
+        };
+
+        await registerTeam(newTeam);
+        setSubmitted(true);
+        setRegistrationState(prev => ({ ...prev, count: currentTeams.length + 1 }));
+    } catch (err: any) {
+        setError(err.message || "SUBMISSION_FAILED");
+    } finally {
+        setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+      return (
+        <section id="register" className="py-32 bg-black border-t border-white/10 flex justify-center">
+            <Loader2 className="h-8 w-8 text-white animate-spin" />
+        </section>
+      )
+  }
 
   if (!registrationState.isOpen && !submitted) {
     return (
@@ -207,7 +234,6 @@ const Registration: React.FC = () => {
                 Secure your team's spot
             </p>
           </div>
-          {/* Removed the slot counter as requested */}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-12">
@@ -379,10 +405,19 @@ const Registration: React.FC = () => {
             <div className="pt-8">
                 <button
                     type="submit"
-                    className="w-full py-6 bg-white text-black font-mono font-bold text-lg hover:bg-gray-200 transition-colors uppercase tracking-widest flex items-center justify-center group"
+                    disabled={isSubmitting}
+                    className={`w-full py-6 bg-white text-black font-mono font-bold text-lg hover:bg-gray-200 transition-colors uppercase tracking-widest flex items-center justify-center group ${isSubmitting ? 'opacity-50 cursor-wait' : ''}`}
                 >
-                    Submit Application
-                    <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="mr-3 h-5 w-5 animate-spin" /> Processing...
+                        </>
+                    ) : (
+                        <>
+                            Submit Application
+                            <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                    )}
                 </button>
 
                 <div className="mt-12 flex justify-center items-center opacity-80 grayscale hover:grayscale-0 transition-all duration-500">

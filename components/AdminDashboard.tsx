@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, LogOut, Download, Trash2, Copy, Check, Search, Mail, Terminal, Power, AlertTriangle } from 'lucide-react';
+import { Lock, LogOut, Download, Trash2, Copy, Check, Search, Mail, Terminal, Power, AlertTriangle, Loader2 } from 'lucide-react';
 import { getTeams, clearTeams, getRegistrationStatus, setRegistrationStatus } from '../services/storageService';
 import { Team } from '../types';
 import { MANAGER_PASSWORD } from '../constants';
@@ -13,13 +13,29 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [isRegOpen, setIsRegOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      setTeams(getTeams());
-      setIsRegOpen(getRegistrationStatus());
+      loadData();
     }
   }, [isAuthenticated]);
+
+  const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [data, status] = await Promise.all([
+            getTeams(),
+            getRegistrationStatus()
+        ]);
+        setTeams(data);
+        setIsRegOpen(status);
+      } catch (err) {
+          console.error("Error loading admin data", err);
+      } finally {
+          setIsLoading(false);
+      }
+  }
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,17 +52,31 @@ const AdminDashboard: React.FC = () => {
     setPassword('');
   };
 
-  const handleClearData = () => {
-    if (confirm("CONFIRM DELETION OF ALL DATA?")) {
-        clearTeams();
-        setTeams([]);
+  const handleClearData = async () => {
+    if (confirm("CONFIRM DELETION OF ALL DATA? THIS CANNOT BE UNDONE.")) {
+        setIsLoading(true);
+        try {
+            await clearTeams();
+            await loadData();
+        } catch (err) {
+            alert("Failed to clear data");
+        } finally {
+            setIsLoading(false);
+        }
     }
   }
 
-  const toggleRegistration = () => {
-      const newState = !isRegOpen;
-      setRegistrationStatus(newState);
-      setIsRegOpen(newState);
+  const toggleRegistration = async () => {
+      setIsLoading(true);
+      try {
+        const newState = !isRegOpen;
+        await setRegistrationStatus(newState);
+        setIsRegOpen(newState);
+      } catch (err) {
+          alert("Failed to update status");
+      } finally {
+          setIsLoading(false);
+      }
   }
 
   const exportToCSV = () => {
@@ -140,7 +170,10 @@ const AdminDashboard: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8 border-b border-white/10 pb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white font-mono">ADMIN DASHBOARD</h1>
+            <h1 className="text-3xl font-bold text-white font-mono flex items-center gap-4">
+                ADMIN DASHBOARD
+                {isLoading && <Loader2 className="w-5 h-5 animate-spin text-gray-500" />}
+            </h1>
             <p className="text-gray-500 mt-2 font-mono text-sm">Participant Database Overview</p>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -173,10 +206,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <button 
                     onClick={toggleRegistration}
+                    disabled={isLoading}
                     className={`flex items-center justify-center w-full py-3 font-mono font-bold text-sm uppercase transition-all
                         ${isRegOpen 
                             ? 'bg-red-900/20 text-red-500 border border-red-500/50 hover:bg-red-900/40' 
                             : 'bg-green-900/20 text-green-500 border border-green-500/50 hover:bg-green-900/40'}
+                        ${isLoading ? 'opacity-50 cursor-wait' : ''}
                     `}
                 >
                     <Power className="h-4 w-4 mr-2" />
@@ -278,7 +313,7 @@ const AdminDashboard: React.FC = () => {
                          <AlertTriangle className="h-3 w-3 mr-2" />
                          Critical Actions
                      </div>
-                    <button onClick={handleClearData} className="flex items-center px-4 py-2 border border-red-900/50 text-red-800 hover:border-red-500 hover:text-red-500 transition-colors font-mono text-xs uppercase">
+                    <button onClick={handleClearData} disabled={isLoading} className="flex items-center px-4 py-2 border border-red-900/50 text-red-800 hover:border-red-500 hover:text-red-500 transition-colors font-mono text-xs uppercase disabled:opacity-50">
                         <Trash2 className="h-3 w-3 mr-2" /> CLEAR DATABASE
                     </button>
                 </div>

@@ -12,7 +12,11 @@ const Hero: React.FC<HeroProps> = ({ onRegisterClick }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
-      setIsOpen(getRegistrationStatus());
+      const fetchStatus = async () => {
+          const status = await getRegistrationStatus();
+          setIsOpen(status);
+      };
+      fetchStatus();
   }, []);
 
   const keywords = [
