@@ -2,14 +2,13 @@ import { supabase } from '../lib/supabaseClient';
 import { Team } from '../types';
 
 /**
- * DATABASE SCHEMA ASSUMPTION:
- * 
+ * DATABASE SCHEMA:
  * Table: teams
- * - id: text/uuid
+ * - id: text (primary key)
  * - school: text
  * - team_name: text
  * - members: jsonb
- * - registered_at: text/timestamp
+ * - registered_at: timestamptz
  * 
  * Table: settings
  * - key: text (primary key)
@@ -27,14 +26,26 @@ export const getTeams = async (): Promise<Team[]> => {
     return [];
   }
 
-  // Map database snake_case columns to application CamelCase model
   return data.map((t: any) => ({
     id: t.id,
     school: t.school,
     teamName: t.team_name,
-    members: t.members, // Supabase handles JSON parsing automatically
+    members: t.members,
     registeredAt: t.registered_at
   }));
+};
+
+// Efficiently get count without downloading all data
+export const getTeamsCount = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('teams')
+    .select('*', { count: 'exact', head: true });
+  
+  if (error) {
+    console.error('Error fetching count:', error);
+    return 0;
+  }
+  return count || 0;
 };
 
 export const registerTeam = async (team: Team): Promise<void> => {
@@ -55,7 +66,6 @@ export const registerTeam = async (team: Team): Promise<void> => {
 };
 
 export const clearTeams = async (): Promise<void> => {
-  // Deletes all rows where ID is not empty (effectively all)
   const { error } = await supabase
     .from('teams')
     .delete()
@@ -69,14 +79,15 @@ export const getRegistrationStatus = async (): Promise<boolean> => {
     .from('settings')
     .select('value')
     .eq('key', 'registration_status')
-    .maybeSingle(); // Use maybeSingle to avoid 406 if not found
+    .maybeSingle();
 
   if (error) {
+    // If error (e.g., connection), default to open to avoid locking out users inadvertently,
+    // or handle as closed depending on preference. Defaulting to true for now.
     console.error('Error fetching status:', error);
-    return true; // Default to open on error
+    return true; 
   }
   
-  // If row doesn't exist, default to true, otherwise check value
   if (!data) return true;
   return data.value !== 'closed';
 };
