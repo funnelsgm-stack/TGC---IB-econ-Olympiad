@@ -25,8 +25,8 @@ const CustomCursor: React.FC = () => {
         target.closest('button') || 
         target.closest('a') ||
         target.tagName === 'INPUT' ||
-        target.tagName === 'SELECT' ||
-        target.closest('.interactive-card')
+        target.tagName === 'SELECT'
+        // Removed .interactive-card to prevent the cursor filter transformation on organizers
       ) {
         setIsHovering(true);
       } else {

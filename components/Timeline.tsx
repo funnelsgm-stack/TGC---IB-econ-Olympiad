@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
@@ -31,7 +32,7 @@ const events: TimelineEvent[] = [
     status: "upcoming",
   },
   {
-    date: "21 MAR 2025",
+    date: "20 MAR 2025",
     title: "THE OLYMPIAD",
     description: "Competition Day at TGC.",
     status: "upcoming",

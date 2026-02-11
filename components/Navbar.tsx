@@ -36,7 +36,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
     { name: 'FORMAT', id: 'about' },
     { name: 'SCHEDULE', id: 'timeline' },
     { name: 'ORGANIZERS', id: 'about-us' },
-    { name: 'REGISTER', id: 'register' },
   ];
 
   const handleNav = (id: string) => {
@@ -59,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                 className="h-10 w-auto mr-1.5 object-contain"
             />
             <span className="text-xl font-bold text-white tracking-tighter font-mono">
-              TGC <span className="text-gray-500 mx-2">-</span> IB-econ <span className="font-light opacity-60">Olympiad</span>
+              <span className="font-normal">The</span> <span className="font-light opacity-60">Youth Economics</span> Olympiad
             </span>
           </div>
           
@@ -75,14 +74,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                 {link.name}
               </button>
             ))}
-            <button 
-                onClick={() => handleNav('manager')} 
-                className={`text-xs tracking-widest font-mono transition-colors duration-300 ${
-                    currentPage === 'manager' ? 'text-white' : 'text-gray-500 hover:text-white'
-                }`}
-            >
-                [MANAGER]
-            </button>
           </div>
 
           <div className="md:hidden flex items-center">
@@ -106,12 +97,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                 {link.name}
               </button>
             ))}
-             <button
-                onClick={() => handleNav('manager')}
-                className="block w-full text-left px-3 py-4 border-l-2 border-transparent hover:border-white text-sm font-mono text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              >
-                MANAGER_ACCESS
-              </button>
           </div>
         </div>
       )}

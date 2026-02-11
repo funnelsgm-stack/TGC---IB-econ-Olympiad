@@ -4,22 +4,16 @@ import Hero from './components/Hero';
 import About from './components/About';
 import AboutUs from './components/AboutUs';
 import Timeline from './components/Timeline';
-import Registration from './components/Registration';
-import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
 
-  // ScrollSpy: Update active section based on scroll position
   useEffect(() => {
     const handleScroll = () => {
-      // If we are in manager mode, don't spy
-      if (currentPage === 'manager') return;
-
-      const sections = ['home', 'about', 'timeline', 'about-us', 'register'];
-      const scrollPosition = window.scrollY + 300; // Offset to trigger active state earlier
+      const sections = ['home', 'about', 'timeline', 'about-us'];
+      const scrollPosition = window.scrollY + 300;
 
       for (const section of sections) {
         const element = document.getElementById(section);
@@ -38,30 +32,12 @@ const App: React.FC = () => {
   }, [currentPage]);
 
   const scrollToSection = (id: string) => {
-    if (id === 'manager') {
-        setCurrentPage('manager');
-        window.scrollTo(0,0);
-        return;
+    const element = document.getElementById(id);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    } else if (id === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    if (currentPage === 'manager') {
-        setCurrentPage('home');
-        // Wait for render to find element
-        setTimeout(() => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-            }
-        }, 100);
-    } else {
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        } else if (id === 'home') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-    // We let the scroll listener update the currentPage state
   };
 
   return (
@@ -74,22 +50,15 @@ const App: React.FC = () => {
       />
 
       <main className="min-h-screen">
-        {currentPage === 'manager' ? (
-          <AdminDashboard />
-        ) : (
-          <>
-            <div id="home">
-                <Hero onRegisterClick={() => scrollToSection('register')} />
-            </div>
-            <About />
-            <Timeline />
-            <AboutUs />
-            <Registration />
-          </>
-        )}
+        <div id="home">
+            <Hero />
+        </div>
+        <About />
+        <Timeline />
+        <AboutUs />
       </main>
 
-      {currentPage !== 'manager' && <Footer />}
+      <Footer />
     </div>
   );
 };

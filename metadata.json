@@ -1,5 +1,5 @@
 {
-  "name": "TGC - IB econ Olympiad",
-  "description": "A single-page application for the IB Economics Case Study Competition, featuring registration, event details, and a manager dashboard.",
+  "name": "The Youth Economics Olympiad",
+  "description": "A single-page application for The Youth Economics Olympiad Case Study Competition, featuring registration, event details, and a manager dashboard.",
   "requestFramePermissions": []
 }

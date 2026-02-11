@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, FileText, Mic, Award } from 'lucide-react';
@@ -14,21 +15,21 @@ const About: React.FC = () => {
     {
         icon: Clock,
         title: "02. THE SPRINT",
-        subtitle: "March 21st - 09:00",
+        subtitle: "March 20th - 09:00",
         desc: "3 Hours of intense problem solving. Teams must apply IB Economic concepts to the real-world crisis presented in the case. No textbooks, just pure reasoning.",
         realWorld: "In crisis management and trading floors, time is the scarcest resource. Teams operate under strict constraints to produce viable economic models."
     },
     {
         icon: Mic,
         title: "03. THE PITCH",
-        subtitle: "March 21st - 12:00",
+        subtitle: "March 20th - 12:00",
         desc: "5 Minutes to convince the board. You present your solution to a panel of expert judges. Clarity, viability, and economic accuracy are your weapons.",
         realWorld: "Complex data is useless if it cannot be communicated. This mimics the boardroom environment where technical analysis meets executive decision-making."
     },
     {
         icon: Award,
         title: "04. THE VERDICT",
-        subtitle: "March 21st - 13:00",
+        subtitle: "March 20th - 13:00",
         desc: "Feedback is delivered. Winners are announced. The goal is not just to win, but to have your economic intuition validated by professionals.",
         realWorld: "Feedback loops are essential for professional growth. Participants receive direct critique from industry experts, simulating a real-world performance review."
     }

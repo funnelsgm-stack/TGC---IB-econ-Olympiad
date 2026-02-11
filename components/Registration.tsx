@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Check, AlertTriangle, ArrowRight, Lock, User, School as SchoolIcon, Mail, Loader2 } from 'lucide-react';
 import { MAX_MEMBERS, MAX_TEAMS } from '../constants';
 import { Team, Student, SCHOOL_LIST } from '../types';
-import { registerTeam, getRegistrationStatus, getTeamsCount } from '../services/storageService';
+import { getTeams, registerTeam, getRegistrationStatus } from '../services/storageService';
 
 const Registration: React.FC = () => {
   const [teamName, setTeamName] = useState('');
@@ -25,12 +25,12 @@ const Registration: React.FC = () => {
 
   const fetchData = async () => {
     try {
-        const count = await getTeamsCount();
+        const teams = await getTeams();
         const status = await getRegistrationStatus();
         setRegistrationState({
-            isFull: count >= MAX_TEAMS,
+            isFull: teams.length >= MAX_TEAMS,
             isOpen: status,
-            count: count
+            count: teams.length
         });
         setIsLoading(false);
     } catch (err) {
@@ -89,11 +89,11 @@ const Registration: React.FC = () => {
 
     try {
         // Re-check status on submit (network check)
-        const currentCount = await getTeamsCount();
+        const currentTeams = await getTeams();
         const currentStatus = await getRegistrationStatus();
         
-        if (currentCount >= MAX_TEAMS) {
-            setRegistrationState(prev => ({ ...prev, isFull: true, count: currentCount }));
+        if (currentTeams.length >= MAX_TEAMS) {
+            setRegistrationState(prev => ({ ...prev, isFull: true, count: currentTeams.length }));
             setError("REGISTRY_FULL");
             setIsSubmitting(false);
             return;
@@ -144,8 +144,7 @@ const Registration: React.FC = () => {
 
         await registerTeam(newTeam);
         setSubmitted(true);
-        // Optimistically update count
-        setRegistrationState(prev => ({ ...prev, count: currentCount + 1 }));
+        setRegistrationState(prev => ({ ...prev, count: currentTeams.length + 1 }));
     } catch (err: any) {
         setError(err.message || "SUBMISSION_FAILED");
     } finally {
@@ -155,7 +154,7 @@ const Registration: React.FC = () => {
 
   if (isLoading) {
       return (
-        <section id="register" className="pt-32 pb-12 bg-black border-t border-white/10 flex justify-center">
+        <section id="register" className="py-32 bg-black border-t border-white/10 flex justify-center">
             <Loader2 className="h-8 w-8 text-white animate-spin" />
         </section>
       )
@@ -163,7 +162,7 @@ const Registration: React.FC = () => {
 
   if (!registrationState.isOpen && !submitted) {
     return (
-        <section id="register" className="pt-32 pb-12 bg-black border-t border-white/10">
+        <section id="register" className="py-32 bg-black border-t border-white/10">
              <div className="max-w-2xl mx-auto px-4 text-center">
                 <div className="border border-white/20 p-12 bg-white/5">
                     <Lock className="h-12 w-12 text-white mx-auto mb-6" />
@@ -177,7 +176,7 @@ const Registration: React.FC = () => {
 
   if (registrationState.isFull && !submitted) {
      return (
-        <section id="register" className="pt-32 pb-12 bg-black border-t border-white/10">
+        <section id="register" className="py-32 bg-black border-t border-white/10">
              <div className="max-w-2xl mx-auto px-4 text-center">
                 <div className="border border-white/20 p-12 bg-white/5">
                     <AlertTriangle className="h-12 w-12 text-white mx-auto mb-6" />
@@ -191,7 +190,7 @@ const Registration: React.FC = () => {
 
   if (submitted) {
     return (
-      <section id="register" className="pt-32 pb-12 bg-black min-h-[60vh] flex items-center border-t border-white/10">
+      <section id="register" className="py-32 bg-black min-h-[60vh] flex items-center border-t border-white/10">
         <div className="max-w-xl mx-auto px-4 w-full">
           <div className="border border-white p-12 bg-black relative">
             <div className="absolute top-0 right-0 p-4">

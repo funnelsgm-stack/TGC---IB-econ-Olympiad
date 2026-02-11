@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
                 className="h-8 w-auto mr-1.5 object-contain"
              />
              <span className="font-bold text-lg font-mono tracking-tighter">
-               TGC <span className="text-gray-500 mx-2">-</span> IB-econ <span className="opacity-50 font-light">Olympiad</span>
+               <span className="font-normal">The</span> Youth Economics <span className="opacity-50 font-light">Olympiad</span>
              </span>
           </div>
           
@@ -39,7 +39,7 @@ const Footer: React.FC = () => {
         
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono uppercase tracking-wider">
-          <p>© 2025 THE GLOBAL COLLEGE. ALL RIGHTS RESERVED.</p>
+          <p>© 2025 THE YOUTH ECONOMICS OLYMPIAD. ALL RIGHTS RESERVED.</p>
           <p className="mt-2 md:mt-0">FOR DP1 ECONOMICS COHORTS</p>
         </div>
       </div>
