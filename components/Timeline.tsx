@@ -20,15 +20,15 @@ const events: TimelineEvent[] = [
     status: "completed",
   },
   {
-    date: "14 MAR 2025",
-    title: "CASE MATERIAL RELEASE",
-    description: "Preliminary context released.",
+    date: "27 FEB 2025",
+    title: "TEAMS CONFIRMED",
+    description: "Registration Deadline. 23:59 local time.",
     status: "active",
   },
   {
-    date: "19 MAR 2025",
-    title: "REGISTRATION DEADLINE",
-    description: "Final deadline. 23:59 local time.",
+    date: "14 MAR 2025",
+    title: "CASE MATERIAL RELEASE",
+    description: "Preliminary context released.",
     status: "upcoming",
   },
   {
